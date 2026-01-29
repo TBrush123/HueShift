@@ -13,9 +13,9 @@ class Player:
         keys = pygame.key.get_pressed()
 
         direction = pygame.Vector2(keys[pygame.K_d] - keys[pygame.K_a],
-                                   keys[pygame.K_s] - keys[pygame.K_w])
+                                keys[pygame.K_s] - keys[pygame.K_w])
         if direction.length() > 0:
-            direction = direction.normalize()
+            direction.normalize_ip()
 
         self.position += direction * self.speed * delta_time
 
