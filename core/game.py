@@ -1,13 +1,15 @@
 import pygame
 from scenes.gameplay import GameplayScene
+from systems.color_system import ColorSystem
 
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1200, 800), pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self.screen = pygame.display.set_mode((1200, 800))
         pygame.display.set_caption("Hue Shift")
         self.clock = pygame.time.Clock()
         self.scene = GameplayScene(self)
+        self.color_system = ColorSystem()
 
     def run(self):
         while True:

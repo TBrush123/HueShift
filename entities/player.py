@@ -4,10 +4,11 @@ class Player:
     def __init__(self, name, health):
         self.name = name
         self.health = health
-        self.position = pygame.Vector2(400, 300)
+        self.pos = pygame.Vector2(400, 300)
         self.color = (255, 0, 0)
         self.speed = 300
         self.direction = pygame.Vector2(0, 0)
+        self.radius = 20
 
     def update(self, delta_time):
         keys = pygame.key.get_pressed()
@@ -17,7 +18,7 @@ class Player:
         if direction.length() > 0:
             direction.normalize_ip()
 
-        self.position += direction * self.speed * delta_time
+        self.pos += direction * self.speed * delta_time
 
     def render(self, screen):   
-        pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), 20)
+        pygame.draw.circle(screen, self.color, (int(self.pos.x), int(self.pos.y)), self.radius)
