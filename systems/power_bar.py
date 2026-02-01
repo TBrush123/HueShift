@@ -5,8 +5,9 @@ class PowerBar():
     def __init__(self):
         self.power = 0
         self.color = (255, 0, 0)
-        self.border_margin = 5
-        self.font = pygame.font.Font(None, 18)
+        self.border_margin = 2
+        self.font = pygame.font.Font(None, 24)
+        self.power_level = 1
 
     def Update(self, delta):
         if self.power <= 0:
@@ -18,7 +19,13 @@ class PowerBar():
 
     def add_power(self, amount=5):
         self.power += amount
+        if self.power >= 100:
+            self.power = 0
+            self.power_up()
     
+    def power_up(self):
+        self.power_level += 1
+        
     def render(self, screen, left_top, size):
         pygame.draw.rect(screen, self.color, 
                          (int(left_top.x), int(left_top.y),
