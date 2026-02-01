@@ -6,6 +6,7 @@ from entities.player import Player
 from entities.bullet import Bullet
 from systems.color_system import ColorSystem
 from systems.collision_system import CollisionSystem
+from systems.power_bar import PowerBar
 from misc.color_text import ColorText
 
 class GameplayScene(Scene):
@@ -17,8 +18,12 @@ class GameplayScene(Scene):
         self.color_texts = [ColorText(0, current_color), ColorText(1, current_color), ColorText(2, current_color), ColorText(3, current_color)]
         self.collision_system = CollisionSystem()
         self.bullets = []
+        self.player_bullets = []
         self.t = 0
         self.bullet_test = True
+        self.power = 1
+        self.player_base_damage = 1
+        self.power_bar = PowerBar()
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -29,9 +34,9 @@ class GameplayScene(Scene):
                 if event.key == pygame.K_SPACE:
                     self.color_system.switch()
                     self.color_texts = []
+                    self.power_bar.change_color(self.color_system.current_color())
 
     def update(self, delta_time):
-
         if self.t >= 1:
             self.bullets.append(Bullet((800, 400), (-1, 0), (255, 0, 0) if self.bullet_test else (0, 0, 255)))
             self.t = 0
@@ -49,11 +54,12 @@ class GameplayScene(Scene):
             if not self.collision_system.circle_hit(self.player, bullet):
                 continue
             elif self.player.color == bullet.color:
-                print("Absorbed!")
+                self.power_bar.add_power()
             else:
                 print("Dead!")
             self.bullets.remove(bullet)
         self.t += delta_time
+        self.power_bar.Update(delta_time)
 
     def render(self, screen, delta_time):   
         screen.fill((228, 228, 228))
@@ -66,3 +72,4 @@ class GameplayScene(Scene):
         fps_font = pygame.font.Font(None, 36)
         fps_text = fps_font.render(f"FPS: {int(self.game.clock.get_fps())}", True, (0, 0, 0))
         screen.blit(fps_text, (10, 10))
+        self.power_bar.render(screen, pygame.Vector2(100, 750),pygame.Vector2(1000, 25))
