@@ -8,11 +8,20 @@ class PowerBar():
         self.border_margin = 2
         self.font = pygame.font.Font(None, 24)
         self.power_level = 1
+        self.phantom_power = 0 # To add smooth border
+        self.power_multiplier = 1.0
 
     def Update(self, delta):
-        if self.power <= 0:
-            return
-        self.power = max(0, self.power - 0.5 * delta) #To not go negative on power.
+        if self.phantom_power != self.power:
+            # Speed based on the difference between phantom_power and target power
+            difference = abs(self.power - self.phantom_power)
+            speed = difference * 2  # Scale the difference to get the speed
+            if self.phantom_power < self.power:
+                self.phantom_power = min(self.phantom_power + speed * delta, self.power)
+            else:
+                self.phantom_power = max(self.phantom_power - speed * delta, self.power)
+        elif self.power > 0:
+            self.power = max(0, self.power - 0.5 * delta) #To not go negative on power.
 
     def change_color(self, color):
         self.color = color
@@ -25,13 +34,17 @@ class PowerBar():
     
     def power_up(self):
         self.power_level += 1
+        self.power_multiplier = 1 + (self.power_level - 1) * 0.5 # Increase multiplier by 0.5 for each level
         
+    def get_power_multiplier(self):
+        return self.power_multiplier
+
     def render(self, screen, left_top, size):
         pygame.draw.rect(screen, self.color, 
                          (int(left_top.x), int(left_top.y),
                           size.x, size.y))
         full_box_width = size.x - self.border_margin * 2
-        color_box_percent = self.power / 100
+        color_box_percent = self.phantom_power / 100
         color_box_width = int(color_box_percent * full_box_width) #First half of the progress bar 
         black_box_width = int((1 - color_box_percent) * full_box_width) #Other half of the progress bar
 

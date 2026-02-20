@@ -1,10 +1,11 @@
 import pygame
+import systems.color_system
 
 class ColorText():
     def __init__(self, index, color):
         self.font = pygame.font.Font(None, 108)
         self.color = color
-        self.text = '/ RED /' if color == (255, 0, 0) else '/ BLUE /'
+        self.text = '/ RED /' if color == systems.color_system.COLORS[0] else '/ BLUE /'
         self.text_bound = 25 * len(self.text)
         self.pos = pygame.Vector2(-(2-index) * self.text_bound, (2 - index) * self.text_bound)
         self.text_speed = 160

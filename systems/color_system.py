@@ -1,6 +1,6 @@
 COLORS = [
-    (255, 0, 0),      # Red
-    (0, 0, 255),      # Blue
+    (255,84,78),      # Red
+    (66,192,255),      # Blue
 ]
 
 class ColorSystem:

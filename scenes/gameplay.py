@@ -4,6 +4,7 @@ import math
 from core.scene import Scene
 from entities.player import Player
 from entities.bullet import Bullet
+from entities.enemy import Enemy
 from systems.color_system import ColorSystem
 from systems.collision_system import CollisionSystem
 from systems.power_bar import PowerBar
@@ -19,11 +20,11 @@ class GameplayScene(Scene):
         self.collision_system = CollisionSystem()
         self.bullets = []
         self.player_bullets = []
-        self.t = 0
-        self.bullet_test = True
         self.power = 1
         self.player_base_damage = 1
         self.power_bar = PowerBar()
+        self.enemy = []
+        self.enemy = [Enemy((400, 200), self.player, (255,84,78), 4)]
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -37,11 +38,6 @@ class GameplayScene(Scene):
                     self.power_bar.change_color(self.color_system.current_color())
 
     def update(self, delta_time):
-        if self.t >= 1:
-            self.bullets.append(Bullet((800, 400), (-1, 0), (255, 0, 0) if self.bullet_test else (0, 0, 255)))
-            self.t = 0
-            self.bullet_test = not self.bullet_test
-
         self.player.color = self.color_system.current_color()
         self.player.update(delta_time)
         if not self.color_texts:
@@ -56,19 +52,33 @@ class GameplayScene(Scene):
             elif self.player.color == bullet.color:
                 self.power_bar.add_power()
             else:
-                print("Dead!")
+                pass
             self.bullets.remove(bullet)
-        self.t += delta_time
+        for bullet in self.player_bullets:
+            bullet.update(delta_time)
+            for enemy in self.enemy:
+                if self.collision_system.circle_hit(enemy, bullet):
+                    enemy.take_damage(self.player_base_damage * self.power_bar.get_power_multiplier(), self.player.color)
+                    if bullet in self.player_bullets:
+                        self.player_bullets.remove(bullet)
         self.power_bar.Update(delta_time)
+        for enemy in self.enemy:
+            enemy.update(delta_time)
+            new_bullets = enemy.get_bullets()
+            self.bullets.extend(new_bullets)
+        self.player_bullets.extend(self.player.get_bullets())
 
     def render(self, screen, delta_time):   
         screen.fill((228, 228, 228))
         self.player.render(screen)
         for bullet in self.bullets:
             bullet.render(screen)
+        for bullet in self.player_bullets:
+            bullet.render(screen)
         for text in self.color_texts:
             text.render(screen)
-
+        for enemy in self.enemy:
+            enemy.render(screen)
         fps_font = pygame.font.Font(None, 36)
         fps_text = fps_font.render(f"FPS: {int(self.game.clock.get_fps())}", True, (0, 0, 0))
         screen.blit(fps_text, (10, 10))
