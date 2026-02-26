@@ -1,4 +1,5 @@
 import pygame
+import math
 
 class PlayerBullet():
     def __init__(self, pos, dir, color):
@@ -6,7 +7,7 @@ class PlayerBullet():
         self.speed = 600
         self.vel = pygame.Vector2(dir) * self.speed
         self.color = color
-        self.radius = 10
+        self.radius = 20
         self.bullet_speed = 3
     
     def update(self, delta):
@@ -15,4 +16,11 @@ class PlayerBullet():
             del self
 
     def render(self, screen):
-        pygame.draw.circle(screen, self.color, (int(self.pos.x), int(self.pos.y)), self.radius)
+        # draw triangle pointing along velocity direction
+        angle = math.atan2(self.vel.y, self.vel.x)
+        points = [
+            (self.pos.x + math.cos(angle) * self.radius, self.pos.y + math.sin(angle) * self.radius),
+            (self.pos.x + math.cos(angle + 2.5) * self.radius, self.pos.y + math.sin(angle + 2.5) * self.radius),
+            (self.pos.x + math.cos(angle - 2.5) * self.radius, self.pos.y + math.sin(angle - 2.5) * self.radius),
+        ]
+        pygame.draw.polygon(screen, (*self.color, int(255 * 0.95)), points)

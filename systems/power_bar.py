@@ -40,20 +40,30 @@ class PowerBar():
         return self.power_multiplier
 
     def render(self, screen, left_top, size):
-        pygame.draw.rect(screen, self.color, 
-                         (int(left_top.x), int(left_top.y),
-                          size.x, size.y))
+        # Draw background bar with 95% opacity
+        bg_surf = pygame.Surface((int(size.x), int(size.y)), pygame.SRCALPHA)
+        pygame.draw.rect(bg_surf, (*self.color, int(255 * 0.95)), 
+                         (0, 0, int(size.x), int(size.y)))
+        screen.blit(bg_surf, (int(left_top.x), int(left_top.y)))
+        
         full_box_width = size.x - self.border_margin * 2
         color_box_percent = self.phantom_power / 100
-        color_box_width = int(color_box_percent * full_box_width) #First half of the progress bar 
-        black_box_width = int((1 - color_box_percent) * full_box_width) #Other half of the progress bar
+        color_box_width = int(color_box_percent * full_box_width)
+        black_box_width = int((1 - color_box_percent) * full_box_width)
 
-        pygame.draw.rect(screen, self.color, 
-                         (int(left_top.x) + self.border_margin, int(left_top.y) + self.border_margin,
-                          color_box_width, size.y - self.border_margin * 2))
-        pygame.draw.rect(screen, (0, 0, 0), (left_top.x + self.border_margin + color_box_width, left_top.y + self.border_margin,
-                                             black_box_width, size.y - self.border_margin * 2))
-        power_text = self.font.render(f"{math.ceil(self.power)}%", True, (255, 255, 255)) #Content of the power text
+        # Draw colored portion with 95% opacity
+        color_surf = pygame.Surface((int(color_box_width), int(size.y - self.border_margin * 2)), pygame.SRCALPHA)
+        pygame.draw.rect(color_surf, (*self.color, int(255 * 0.95)), 
+                         (0, 0, color_box_width, size.y - self.border_margin * 2))
+        screen.blit(color_surf, (int(left_top.x) + self.border_margin, int(left_top.y) + self.border_margin))
+        
+        # Draw black portion with 95% opacity
+        black_surf = pygame.Surface((int(black_box_width), int(size.y - self.border_margin * 2)), pygame.SRCALPHA)
+        pygame.draw.rect(black_surf, (0, 0, 0, int(242)), 
+                         (0, 0, black_box_width, size.y - self.border_margin * 2))
+        screen.blit(black_surf, (int(left_top.x) + self.border_margin + color_box_width, int(left_top.y) + self.border_margin))
+        
+        power_text = self.font.render(f"{math.ceil(self.power)}%", True, (255, 255, 255))
         text_rect = power_text.get_rect()
-        text_rect.center = ((left_top.x * 2 + size.x) / 2, (left_top.y * 2 + size.y) / 2) #Text position
+        text_rect.center = ((left_top.x * 2 + size.x) / 2, (left_top.y * 2 + size.y) / 2)
         screen.blit(power_text, text_rect)

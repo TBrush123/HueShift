@@ -23,7 +23,8 @@ class ColorText():
 
     def render(self, screen):
         text_surface = self.font.render(self.text, True, self.color)
+        # Apply 95% opacity
+        text_surface.set_alpha(int(255 * 0.95))
         angled_text = pygame.transform.rotate(text_surface, 45)
         rect = angled_text.get_rect(center=self.pos + self.centre_pos)
-
         screen.blit(angled_text, rect)

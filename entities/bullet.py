@@ -6,7 +6,7 @@ class Bullet():
         self.speed = 600
         self.vel = pygame.Vector2(dir) * self.speed
         self.color = color
-        self.radius = 6
+        self.radius = 14
     
     def update(self, delta):
         self.pos += self.vel * delta
@@ -14,4 +14,7 @@ class Bullet():
             del self
 
     def render(self, screen):
-        pygame.draw.circle(screen, self.color, (int(self.pos.x), int(self.pos.y)), self.radius)
+        # Create a surface with the bullet color at 95% opacity
+        bullet_surf = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(bullet_surf, (*self.color, int(255 * 0.95)), (self.radius, self.radius), self.radius)
+        screen.blit(bullet_surf, (int(self.pos.x) - self.radius, int(self.pos.y) - self.radius))
