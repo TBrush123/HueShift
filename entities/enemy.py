@@ -53,17 +53,18 @@ class Enemy:
         self.flash_timer = 0
         
         # choose initial shoot interval based on pattern
+        # give enemies a little more breathing room by spacing out their shots
         match pattern:
             case 0:
-                self.shoot_interval = 0.5  # Omnidirectional
+                self.shoot_interval = 1.0  # floating guys don't fire at all
             case 1:
-                self.shoot_interval = 0.4  # Cone shots
+                self.shoot_interval = 0.8  # cone shots
             case 2:
-                self.shoot_interval = 0.3  # Alternating pattern
+                self.shoot_interval = 0.6  # alternating pattern
             case 3:
-                self.shoot_interval = 0.2  # Rapid burst
+                self.shoot_interval = 0.5  # rapid burst
             case 4:
-                self.shoot_interval = 0.6  # Spiral pattern
+                self.shoot_interval = 1.2  # spiral pattern
     
     def set_color(self, color):
         self.color = color
@@ -97,7 +98,7 @@ class Enemy:
             self.flash_timer -= delta
         
     def take_damage(self, amount, death_color):
-        self.health -= amount * (2 if self.color != death_color else 1)
+        self.health -= amount * (3 if self.color != death_color else 1)
         print(f"Enemy health: {self.health}")
         # trigger flash when hit but not dead
         if self.health > 0:
@@ -106,13 +107,17 @@ class Enemy:
         if self.health > 0:
             return None, bullets  # Alive, no bullets
         
-        # enemy is dead - if killed by matching color, shoot death bullets
-        if self.color == death_color:
-            # Generate spread of bullets in their color
-            for i in range(8):
-                angle = (2 * math.pi * i) / 8
-                direction = pygame.Vector2(math.cos(angle), math.sin(angle))
-                bullets.append(spawn_bullet(self.pos, direction, self.color, self.bullet_speed))
+        # enemy is dead - if killed by matching color, shoot bullets toward player
+        if self.color == death_color and self.player:
+            direction = self.player.pos - self.pos
+            if direction.length() > 0:
+                direction = direction.normalize()
+                # spawn 2-3 bullets in a scattered pattern around player direction
+                num = random.randint(2, 3)
+                for i in range(num):
+                    angle = math.atan2(direction.y, direction.x) + random.uniform(-1.0, 1.0)
+                    dir_vec = pygame.Vector2(math.cos(angle), math.sin(angle))
+                    bullets.append(spawn_bullet(self.pos, dir_vec, self.color, self.bullet_speed))
         
         return self, bullets
     
@@ -159,9 +164,9 @@ class Enemy:
             direction_to_player = direction_to_player.normalize()
             base_angle = math.atan2(direction_to_player.y, direction_to_player.x)
             
-            # 3 bullets in a cone
-            for i in range(3):
-                offset = (i - 1) * 0.3  # Spread cone
+            # 2 bullets in a slightly wider cone to reduce spam
+            for i in range(2):
+                offset = (i - 0.5) * 0.4  # Spread cone
                 angle = base_angle + offset
                 direction = pygame.Vector2(math.cos(angle), math.sin(angle))
                 bullets.append(spawn_bullet(self.pos, direction, self.color, self.bullet_speed))
@@ -175,9 +180,9 @@ class Enemy:
             direction_to_player = direction_to_player.normalize()
             base_angle = math.atan2(direction_to_player.y, direction_to_player.x)
             
-            # 5 bullets with alternating spread
-            for i in range(5):
-                offset = (i - 2) * 0.4
+            # 3 bullets with alternating spread
+            for i in range(3):
+                offset = (i - 1) * 0.5
                 angle = base_angle + offset
                 direction = pygame.Vector2(math.cos(angle), math.sin(angle))
                 bullets.append(spawn_bullet(self.pos, direction, self.color, self.bullet_speed))
@@ -196,7 +201,7 @@ class Enemy:
     def _pattern_spiral(self):
         """Pattern 4: Spiral pattern that rotates"""
         bullets = []
-        num_bullets = 6
+        num_bullets = 4
         for i in range(num_bullets):
             angle = (2 * math.pi * i) / num_bullets + self.angle_offset * 2
             direction = pygame.Vector2(math.cos(angle), math.sin(angle))
@@ -271,12 +276,16 @@ class ChameleonEnemy(Enemy):
         if self.health > 0:
             return None, bullets  # Alive, no bullets
         
-        # Chameleon is dead - if killed by matching color, shoot death bullets
-        if self.color == death_color:
-            # Generate more spread of bullets (chameleon shoots more on death)
-            for i in range(12):
-                angle = (2 * math.pi * i) / 12
-                direction = pygame.Vector2(math.cos(angle), math.sin(angle))
-                bullets.append(spawn_bullet(self.pos, direction, self.color, self.bullet_speed))
+        # Chameleon is dead - if killed by matching color, shoot toward player with larger fan
+        if self.color == death_color and self.player:
+            direction = self.player.pos - self.pos
+            if direction.length() > 0:
+                direction = direction.normalize()
+                # fewer bullets but more scatter
+                num = random.randint(2, 3)
+                for i in range(num):
+                    angle = math.atan2(direction.y, direction.x) + random.uniform(-1.5, 1.5)
+                    dir_vec = pygame.Vector2(math.cos(angle), math.sin(angle))
+                    bullets.append(spawn_bullet(self.pos, dir_vec, self.color, self.bullet_speed))
         
         return self, bullets

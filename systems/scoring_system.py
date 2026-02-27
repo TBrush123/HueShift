@@ -9,8 +9,6 @@ class ScoringSystem:
         self.kill_streak = 0
         self.time_since_last_kill = 0
         self.streak_timeout = 5.0  # Reset streak (and multiplier) if no kills for 5 seconds
-        # no separate multibar; time remaining drives multiplier expiration
-        # Messages shown every 10x multiplier (index based on floor(multiplier/10))
         self.multiplier_messages = [
             "Dull.",
             "Keep it up!",
@@ -35,9 +33,6 @@ class ScoringSystem:
     def add_kill(self, base_score=100, enemy_hp=50):
         """
         Add a kill to the scoring system
-        Arguments:
-            base_score: Base score for defeating an enemy
-            enemy_hp: The HP of the defeated enemy (used for bonus calculation)
         """
         self.kill_streak += 1
         self.time_since_last_kill = 0
@@ -63,11 +58,6 @@ class ScoringSystem:
     
     def get_current_rank(self):
         """Get the current rank name based on total score.
-
-        Iterates through the score thresholds in descending order so that the
-        highest possible rank for the current score is returned.  If the player
-        hasn't reached the C threshold (which should never happen since C == 0)
-        an empty string is returned.
         """
         for threshold, rank_name in reversed(self.rank_thresholds):
             if self.score >= threshold:

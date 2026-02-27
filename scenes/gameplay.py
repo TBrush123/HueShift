@@ -7,7 +7,7 @@ from core.timer import TimerSystem
 from entities.player import Player
 from entities.bullet import Bullet
 from entities.enemy import Enemy
-from entities.boss import Boss
+
 from entities.particle import TriangleParticle
 from entities.effects import ColorParticle, FloatingText
 from systems.color_system import ColorSystem
@@ -78,15 +78,12 @@ class GameplayScene(Scene):
                     # offset text slightly to the right of player
                     self.floating_texts.append(FloatingText(self.player.pos + pygame.Vector2(20,0), name, new_color))
                     self.aim_bar.set_color(new_color)
-                if event.key == pygame.K_BACKSLASH:
-                    # debug key
-                    if not self.timer_system.is_boss_spawned():
-                        self.timer_system._spawn_boss()
-                    if self.timer_system.boss:
-                        self.timer_system.boss.health = 0
 
     def update(self, delta_time):
         if self.player_dead:
+            return
+        # if time has expired, stop further gameplay updates
+        if self.timer_system.is_time_up():
             return
         self.player.color = self.color_system.current_color()
         self.player.update(delta_time)
@@ -111,7 +108,9 @@ class GameplayScene(Scene):
             bullet.update(delta_time)
             for enemy in self.enemy:
                 if self.collision_system.circle_hit(enemy, bullet):
-                    self.scoring_system.extend_time(0.2)
+                    # Increase extend time bonus for opposite color hits
+                    time_bonus = 0.4 if enemy.color != self.player.color else 0.15
+                    self.scoring_system.extend_time(time_bonus)
                     dead_enemy, bullets = enemy.take_damage(self.player_base_damage * self.power_bar.get_power_multiplier(), self.player.color)
                     if dead_enemy:
                         self.enemy.remove(dead_enemy)
@@ -122,13 +121,6 @@ class GameplayScene(Scene):
                     if bullet in self.player_bullets:
                         self.player_bullets.remove(bullet)
             
-            boss = self.timer_system.get_boss()
-            if boss and self.collision_system.circle_hit(boss, bullet):
-                boss_dead = boss.take_damage(self.player_base_damage * self.power_bar.get_power_multiplier(), self.player.color)
-                if boss_dead:
-                    self.scoring_system.add_kill(base_score=1000, enemy_hp=boss.max_health)
-                if bullet in self.player_bullets:
-                    self.player_bullets.remove(bullet)
         
 
         # update particles
@@ -165,7 +157,6 @@ class GameplayScene(Scene):
             self.bullets.extend(new_bullets)
             # Check enemy collision with player
             if not self.player_dead and self.collision_system.circle_hit(self.player, enemy):
-                # Enemy collision deals heavier damage and destroys the enemy
                 self.player.health -= 50
                 try:
                     self.enemy.remove(enemy)
@@ -178,11 +169,8 @@ class GameplayScene(Scene):
         # Update timer system and get enemies to spawn
         self.timer_system.update(delta_time, self.enemy)
         self.enemy = self.timer_system.get_enemies()
-        
-        # Check for game completion
-        if self.timer_system.is_boss_spawned() and self.timer_system.is_boss_dead():
-            # nothing special, rendering handles completion
-            pass
+
+        # No boss anymore; completion is handled in render when time runs out
 
     def render(self, screen, delta_time):   
         # Draw background if available, otherwise fill
@@ -237,6 +225,11 @@ class GameplayScene(Scene):
         fps_font = pygame.font.Font(None, 36)
         fps_text = fps_font.render(f"FPS: {int(self.game.clock.get_fps())}", True, (0, 0, 0))
         screen.blit(fps_text, (10, 10))
+        # draw level indicator above bar
+        level = int(self.timer_system.elapsed_time // 30) + 1
+        lvl_font = pygame.font.Font(None, 24)
+        lvl_text = lvl_font.render(f"Level {level}", True, (0,0,0))
+        screen.blit(lvl_text, (100, 750 - 30))
         self.power_bar.render(screen, pygame.Vector2(100, 750),pygame.Vector2(1000, 25))
         
         # Display timer at the top
@@ -255,15 +248,14 @@ class GameplayScene(Scene):
         timer_rect = timer_text.get_rect(center=(600, 30))
         screen.blit(timer_text, timer_rect)
         
-        # When boss is dead, show results directly
-        is_game_complete = self.timer_system.is_boss_spawned() and self.timer_system.is_boss_dead()
-        if is_game_complete:
+        # When time is up, show results directly
+        if self.timer_system.is_time_up():
             # End game results screen
             screen.fill((0, 0, 0))
             
-            # Victory message
+            # Time-up message
             victory_font = pygame.font.Font(None, 100)
-            victory_text = victory_font.render("VICTORY!", True, (0, 255, 0))
+            victory_text = victory_font.render("TIME'S UP!", True, (0, 255, 0))
             victory_rect = victory_text.get_rect(center=(600, 150))
             screen.blit(victory_text, victory_rect)
             
@@ -277,7 +269,6 @@ class GameplayScene(Scene):
             # Final rank
             final_rank = self.scoring_system.get_current_rank()
             rank_font = pygame.font.Font(None, 80)
-            # ensure there is always at least a C
             display_rank = final_rank if final_rank else "C"
             rank_text = rank_font.render(display_rank, True, (255, 100, 0))
             rank_rect = rank_text.get_rect(center=(600, 450))

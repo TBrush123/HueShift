@@ -40,7 +40,7 @@ class FloatingText:
     def render(self, screen):
         if self.lifetime <= 0:
             return
-        alpha = int(255 * (self.lifetime / 1.0))
+        alpha = int(255 * (self.lifetime / 1.0) * 0.95)
         text_surf = self.font.render(self.text, True, self.color)
         text_surf.set_alpha(alpha)
         rect = text_surf.get_rect(center=(int(self.pos.x), int(self.pos.y)))

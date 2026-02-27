@@ -103,6 +103,7 @@ class Player:
             w, h = self.sprite_width, self.sprite_height
             self.image = pygame.Surface((w, h), pygame.SRCALPHA)
             pygame.draw.rect(self.image, (200, 200, 300, 0), pygame.Rect(0, 0, w*2, h*2), border_radius=max(0, w//4))
+            self.image.set_alpha(int(255 * 0.95))
 
         rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
         

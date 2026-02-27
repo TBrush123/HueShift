@@ -14,7 +14,7 @@ class Bullet():
             del self
 
     def render(self, screen):
-        # Create a surface with the bullet color at 95% opacity
+        # Create a surface with the bullet 
         bullet_surf = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
         pygame.draw.circle(bullet_surf, (*self.color, int(255 * 0.95)), (self.radius, self.radius), self.radius)
         screen.blit(bullet_surf, (int(self.pos.x) - self.radius, int(self.pos.y) - self.radius))
